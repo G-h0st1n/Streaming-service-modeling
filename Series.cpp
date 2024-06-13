@@ -6,12 +6,13 @@ Series::Series(int id, const string &name, int length, const string &genre, cons
     : Video(id, name, length, genre), episodes(episodes), seasons(seasons) {}
 
 void Series::display() const {
-    cout << "Series: " << name << " (" << genre << ") - " << length << " episodes. Rating: " << getAverageRating() << endl;
+    cout << "Series: " << name << ", Seasons: " << seasons << ", Average Rating: " << getAverageRating() << endl;
 }
 
 void Series::displayEpisodes() const {
     cout << "Episodes of " << name << ":" << endl;
     for (const auto &episode : episodes) {
-        cout << " - " << episode << endl;
+        cout << episode << endl;
     }
+    cout << "Total Seasons: " << seasons << ", Average Rating: " << getAverageRating() << endl;
 }
