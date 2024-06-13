@@ -3,14 +3,15 @@
 
 #include "Video.h"
 #include <vector>
+#include <string>
 
 class Series : public Video {
-private:
-    vector<string> episodes;
+    std::vector<std::string> episodes;
     int seasons;
 
 public:
-    Series(int id, const string &name, int length, const string &genre, const vector<string> &episodes, int seasons);
+    Series(int id, const std::string &name, int length, const std::string &genre, const std::vector<std::string> &episodes, int seasons);
+
     void display() const override;
     void displayEpisodes() const;
 };
