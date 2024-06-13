@@ -1,4 +1,3 @@
-// Video.cpp
 #include "Video.h"
 #include <numeric>
 using namespace std;

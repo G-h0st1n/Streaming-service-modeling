@@ -1,19 +1,17 @@
-// Series.cpp
 #include "Series.h"
-#include <numeric>
+#include <iostream>
 using namespace std;
 
-Series::Series(int id, const string &name, string name_of_espisodes, int amount, int length, const string &genre)
-    : id(id), name(name), name_of_episodes(name_of_episodes), amount(amount), length(length), genre(genre) {}
+Series::Series(int id, const string &name, int length, const string &genre, const vector<string> &episodes, int seasons)
+    : Video(id, name, length, genre), episodes(episodes), seasons(seasons) {}
 
-void Series::addRating(int rating) {
-    if (rating >= 1 && rating <= 5) {
-        ratings.push_back(rating);
-    }
+void Series::display() const {
+    cout << "Series: " << name << " (" << genre << ") - " << length << " episodes. Rating: " << getAverageRating() << endl;
 }
 
-double Series::getAverageRating() const {
-    if (ratings.empty()) return 0.0;
-    double sum = accumulate(ratings.begin(), ratings.end(), 0);
-    return sum / ratings.size();
+void Series::displayEpisodes() const {
+    cout << "Episodes of " << name << ":" << endl;
+    for (const auto &episode : episodes) {
+        cout << " - " << episode << endl;
+    }
 }
