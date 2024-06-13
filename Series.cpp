@@ -1,18 +1,28 @@
 #include "Series.h"
-#include <iostream>
-using namespace std;
 
-Series::Series(int id, const string &name, int length, const string &genre, const vector<string> &episodes, int seasons)
+Series::Series(int id, const string &name, int length, const string &genre,
+               const vector<string> &episodes, int seasons)
     : Video(id, name, length, genre), episodes(episodes), seasons(seasons) {}
 
 void Series::display() const {
-    cout << "Series: " << name << ", Seasons: " << seasons << ", Average Rating: " << getAverageRating() << endl;
+    cout << "Series: " << name << "\n";
+    cout << "Genre: " << genre << "\n";
+    cout << "Seasons: " << seasons << "\n";
+    cout << "Episodes:\n";
+    for (const auto &episode : episodes) {
+        cout << "  - " << episode << "\n"; // Each episode on a new line
+    }
+    cout << "Average Rating: " << getAverageRating() << "\n";
 }
 
-void Series::displayEpisodes() const {
-    cout << "Episodes of " << name << ":" << endl;
-    for (const auto &episode : episodes) {
-        cout << episode << endl;
+void Series::addRating(double rating) {
+    if (rating >= 1.0 && rating <= 5.0) {
+        ratings.push_back(rating);
     }
-    cout << "Total Seasons: " << seasons << ", Average Rating: " << getAverageRating() << endl;
+}
+
+double Series::getAverageRating() const {
+    if (ratings.empty()) return 0.0;
+    double sum = accumulate(ratings.begin(), ratings.end(), 0.0);
+    return sum / ratings.size();
 }

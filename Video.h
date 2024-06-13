@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 using namespace std;
 
@@ -23,6 +22,11 @@ public:
     double getAverageRating() const;
 
     virtual void display() const = 0; // Pure virtual function
+
+    // Getter for name
+    string getName() const {
+        return name;
+    }
 };
 
 #endif // VIDEO_H
