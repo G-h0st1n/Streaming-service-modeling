@@ -1,156 +1,171 @@
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include "Movie.h"
 #include "Series.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <stdexcept>
 
 using namespace std;
 
-// Function to remove BOM if present
-void removeBOM(string &line) {
-    if (line.size() >= 3 && line[0] == '\xEF' && line[1] == '\xBB' && line[2] == '\xBF') {
-        line.erase(0, 3);
-    }
-}
-
-// Function to read movies from CSV file
-vector<shared_ptr<Video>> readMovies(const string &filename) {
-    vector<shared_ptr<Video>> movies;
+vector<Video*> loadMovies(const string& filename) {
+    vector<Video*> movies;
     ifstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("Could not open file");
+    }
+
     string line;
+    getline(file, line); // Skip header
+
     while (getline(file, line)) {
-        removeBOM(line);
+        if (line.empty()) continue; // Skip empty lines
+
         stringstream ss(line);
-        string id, name, length, genre, ratings;
-        getline(ss, id, ',');
+        string idStr, name, lengthStr, genre, ratingsStr;
+        getline(ss, idStr, ',');
         getline(ss, name, ',');
-        getline(ss, length, ',');
+        getline(ss, lengthStr, ',');
         getline(ss, genre, ',');
-        getline(ss, ratings, ',');
+        getline(ss, ratingsStr, ',');
 
         try {
-            int movieId = stoi(id);
-            int movieLength = stoi(length);
-            shared_ptr<Movie> movie = make_shared<Movie>(movieId, name, movieLength, genre);
+            int id = stoi(idStr);
+            int length = stoi(lengthStr);
 
-            stringstream ratingsStream(ratings);
+            Movie* movie = new Movie(id, name, length, genre);
+
+            stringstream ratingsStream(ratingsStr);
             string rating;
             while (getline(ratingsStream, rating, ';')) {
-                try {
-                    movie->addRating(stoi(rating));
-                } catch (const invalid_argument &) {
-                    cerr << "Invalid rating: " << rating << " for movie " << name << endl;
+                if (!rating.empty()) {
+                    movie->addRating(stod(rating));
                 }
             }
+
             movies.push_back(movie);
-        } catch (const invalid_argument &e) {
+        } catch (const invalid_argument& e) {
             cerr << "Invalid argument while processing line: " << line << " - " << e.what() << endl;
-        } catch (const out_of_range &e) {
-            cerr << "Out of range error while processing line: " << line << " - " << e.what() << endl;
         }
     }
+
     return movies;
 }
 
-// Function to read series from CSV file
-vector<shared_ptr<Video>> readSeries(const string &filename) {
-    vector<shared_ptr<Video>> seriesList;
+vector<Video*> loadSeries(const string& filename) {
+    vector<Video*> seriesList;
     ifstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("Could not open file");
+    }
+
     string line;
+    getline(file, line); // Skip header
+
     while (getline(file, line)) {
-        removeBOM(line);
+        if (line.empty()) continue; // Skip empty lines
+
         stringstream ss(line);
-        string id, name, length, genre, episodes, seasons, ratings;
-        getline(ss, id, ',');
+        string idStr, name, lengthStr, genre, episodesStr, seasonsStr, ratingsStr;
+        getline(ss, idStr, ',');
         getline(ss, name, ',');
-        getline(ss, length, ',');
+        getline(ss, lengthStr, ',');
         getline(ss, genre, ',');
-        getline(ss, episodes, ',');
-        getline(ss, seasons, ',');
-        getline(ss, ratings, ',');
+        getline(ss, episodesStr, ',');
+        getline(ss, seasonsStr, ',');
+        getline(ss, ratingsStr, ',');
 
         try {
-            int seriesId = stoi(id);
-            int seriesLength = stoi(length);
-            int seriesSeasons = stoi(seasons);
-            
-            vector<string> episodeList;
-            stringstream episodesStream(episodes);
+            int id = stoi(idStr);
+            int length = stoi(lengthStr);
+            int seasons = stoi(seasonsStr);
+
+            vector<string> episodes;
+            stringstream episodesStream(episodesStr);
             string episode;
-            while (getline(episodesStream, episode, '|')) {
-                episodeList.push_back(episode);
+            while (getline(episodesStream, episode, ';')) {
+                episodes.push_back(episode);
             }
 
-            shared_ptr<Series> series = make_shared<Series>(seriesId, name, seriesLength, genre, episodeList, seriesSeasons);
-            
-            stringstream ratingsStream(ratings);
+            Series* series = new Series(id, name, length, genre, episodes, seasons);
+
+            stringstream ratingsStream(ratingsStr);
             string rating;
             while (getline(ratingsStream, rating, ';')) {
-                try {
-                    series->addRating(stoi(rating));
-                } catch (const invalid_argument &) {
-                    cerr << "Invalid rating: " << rating << " for series " << name << endl;
+                if (!rating.empty()) {
+                    series->addRating(stod(rating));
                 }
             }
+
             seriesList.push_back(series);
-        } catch (const invalid_argument &e) {
+        } catch (const invalid_argument& e) {
             cerr << "Invalid argument while processing line: " << line << " - " << e.what() << endl;
-        } catch (const out_of_range &e) {
-            cerr << "Out of range error while processing line: " << line << " - " << e.what() << endl;
         }
     }
+
     return seriesList;
 }
 
 void displayMenu() {
-    cout << "Welcome to the archives, what is your inquiry?" << endl;
+    cout << "Welcome to the archives, what is your inquiry?\n";
     cout << "Press M to see the movies or S for the series: ";
 }
 
-void displayMovies(const vector<shared_ptr<Video>> &movies) {
-    cout << "Movies:" << endl;
+void displayMovies(const vector<Video*>& movies) {
+    cout << "Movies:\n";
     for (size_t i = 0; i < movies.size(); ++i) {
-        cout << i + 1 << ". ";
-        movies[i]->display();
+        cout << i + 1 << ". " << movies[i]->getName() << "\n";
     }
 }
 
-void displaySeries(const vector<shared_ptr<Video>> &seriesList) {
-    cout << "Series:" << endl;
+void displaySeries(const vector<Video*>& seriesList) {
+    cout << "Series:\n";
     for (size_t i = 0; i < seriesList.size(); ++i) {
-        cout << i + 1 << ". ";
-        seriesList[i]->display();
+        cout << i + 1 << ". " << seriesList[i]->getName() << "\n";
     }
 }
 
 int main() {
-    vector<shared_ptr<Video>> movies = readMovies("Movies.csv");
-    vector<shared_ptr<Video>> seriesList = readSeries("Series.csv");
+    try {
+        vector<Video*> movies = loadMovies("Movies.csv");
+        vector<Video*> seriesList = loadSeries("Series.csv");
 
-    char choice;
-    do {
-        displayMenu();
-        cin >> choice;
+        char choice;
+        do {
+            displayMenu();
+            cin >> choice;
+            choice = toupper(choice);
 
-        if (choice == 'M' || choice == 'm') {
-            displayMovies(movies);
-        } else if (choice == 'S' || choice == 's') {
-            displaySeries(seriesList);
-
-            cout << "Enter the number of the series to inquire further or 0 to go back: ";
-            int seriesChoice;
-            cin >> seriesChoice;
-            if (seriesChoice > 0 && seriesChoice <= seriesList.size()) {
-                auto series = dynamic_pointer_cast<Series>(seriesList[seriesChoice - 1]);
-                if (series) {
-                    series->displayEpisodes();
+            if (choice == 'M') {
+                displayMovies(movies);
+                cout << "Enter the number of the movie to inquire further or 0 to go back: ";
+                int selection;
+                cin >> selection;
+                if (selection > 0 && selection <= static_cast<int>(movies.size())) {
+                    movies[selection - 1]->display();
+                }
+            } else if (choice == 'S') {
+                displaySeries(seriesList);
+                cout << "Enter the number of the series to inquire further or 0 to go back: ";
+                int selection;
+                cin >> selection;
+                if (selection > 0 && selection <= static_cast<int>(seriesList.size())) {
+                    seriesList[selection - 1]->display();
                 }
             }
+        } while (choice == 'M' || choice == 'S');
+
+        // Clean up
+        for (Video* video : movies) {
+            delete video;
         }
-    } while (choice != 'Q' && choice != 'q');
+        for (Video* video : seriesList) {
+            delete video;
+        }
+
+    } catch (const exception& e) {
+        cerr << e.what() << endl;
+    }
 
     return 0;
 }
